@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Museum Artifact Preservation</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        header p {
+            margin: 8px 0 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .card h2 {
+            margin: 5px 0;
+            font-size: 30px;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #2980b9;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover {
+            background: #1f6391;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #34495e;
+            color: white;
+        }
+
+        .safe {
+            color: green;
+            font-weight: bold;
+        }
+
+        .warning {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .danger {
+            color: red;
+            font-weight: bold;
+        }
+
+        @media(max-width: 800px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Smart Museum Artifact Preservation Platform</h1>
+    <p>Artifact Management and Preservation Monitoring System</p>
+</header>
+
+<div class="container">
+
+    <!-- Dashboard -->
+    <div class="cards">
+
+        <div class="card">
+            <h3>Total Artifacts</h3>
+            <h2 id="totalArtifacts">0</h2>
+        </div>
+
+        <div class="card">
+            <h3>Safe Artifacts</h3>
+            <h2 id="safeArtifacts">0</h2>
+        </div>
+
+        <div class="card">
+            <h3>Needs Attention</h3>
+            <h2 id="attentionArtifacts">0</h2>
+        </div>
+
+        <div class="card">
+            <h3>Alerts</h3>
+            <h2 id="totalAlerts">0</h2>
+        </div>
+
+    </div>
+
+    <!-- Add Artifact -->
+    <div class="section">
+
+        <h2>Add New Artifact</h2>
+
+        <form id="artifactForm">
+
+            <input
+                type="text"
+                id="name"
+                placeholder="Artifact Name"
+                required
+            >
+
+            <input
+                type="text"
+                id="category"
+                placeholder="Category"
+                required
+            >
+
+            <input
+                type="text"
+                id="material"
+                placeholder="Material"
+                required
+            >
+
+            <select id="condition">
+                <option value="Good">Good</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Poor">Poor</option>
+            </select>
+
+            <button type="submit">Add Artifact</button>
+
+        </form>
+
+    </div>
+
+    <!-- Environment Monitoring -->
+    <div class="section">
+
+        <h2>Environmental Monitoring</h2>
+
+        <p>
+            Temperature:
+            <strong id="temperature">--</strong> °C
+        </p>
+
+        <p>
+            Humidity:
+            <strong id="humidity">--</strong> %
+        </p>
+
+        <p>
+            Environment Status:
+            <strong id="environmentStatus">Checking...</strong>
+        </p>
+
+        <button onclick="checkEnvironment()">
+            Check Environment
+        </button>
+
+    </div>
+
+    <!-- Artifact List -->
+    <div class="section">
+
+        <h2>Artifact Inventory</h2>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Material</th>
+                    <th>Condition</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="artifactTable">
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- Alerts -->
+    <div class="section">
+
+        <h2>Preservation Alerts</h2>
+
+        <ul id="alertList">
+            <li>No alerts available.</li>
+        </ul>
+
+    </div>
+
+</div>
+
+<script>
+    async function loadDashboard() {
+
+        const response = await fetch("/api/dashboard");
+
+        const data = await response.json();
+
+        document.getElementById("totalArtifacts").textContent =
+            data.totalArtifacts;
+
+        document.getElementById("safeArtifacts").textContent =
+            data.safeArtifacts;
+
+        document.getElementById("attentionArtifacts").textContent =
+            data.attentionArtifacts;
+
+        document.getElementById("totalAlerts").textContent =
+            data.alerts;
+    }
+
+    async function loadArtifacts() {
+
+        const response = await fetch("/api/artifacts");
+
+        const artifacts = await response.json();
+
+        const table = document.getElementById("artifactTable");
+
+        table.innerHTML = "";
+
+        artifacts.forEach(artifact => {
+
+            let conditionClass = "";
+
+            if (artifact.condition === "Good") {
+                conditionClass = "safe";
+            }
+            else if (artifact.condition === "Moderate") {
+                conditionClass = "warning";
+            }
+            else {
+                conditionClass = "danger";
+            }
+
+            table.innerHTML += `
+                <tr>
+                    <td>${artifact.id}</td>
+                    <td>${artifact.name}</td>
+                    <td>${artifact.category}</td>
+                    <td>${artifact.material}</td>
+                    <td class="${conditionClass}">
+                        ${artifact.condition}
+                    </td>
+                    <td>
+                        <button onclick="deleteArtifact(${artifact.id})">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    document.getElementById("artifactForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const artifact = {
+
+                name: document.getElementById("name").value,
+
+                category: document.getElementById("category").value,
+
+                material: document.getElementById("material").value,
+
+                condition: document.getElementById("condition").value
+            };
+
+            await fetch("/api/artifacts", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(artifact)
+            });
+
+            this.reset();
+
+            loadArtifacts();
+
+            loadDashboard();
+        });
+
+    async function deleteArtifact(id) {
+
+        await fetch(`/api/artifacts/${id}`, {
+            method: "DELETE"
+        });
+
+        loadArtifacts();
+
+        loadDashboard();
+    }
+    async function checkEnvironment() {
+
+        const response = await fetch("/api/environment");
+
+        const data = await response.json();
+
+        document.getElementById("temperature").textContent =
+            data.temperature;
+
+        document.getElementById("humidity").textContent =
+            data.humidity;
+
+        const status =
+            document.getElementById("environmentStatus");
+
+        status.textContent = data.status;
+
+        if (data.status === "SAFE") {
+            status.className = "safe";
+        }
+        else if (data.status === "WARNING") {
+            status.className = "warning";
+        }
+        else {
+            status.className = "danger";
+        }
+    }
+    loadDashboard();
+    loadArtifacts();
+    checkEnvironment();
+
+</script>
+
+</body>
+</html>
