@@ -1,0 +1,77 @@
+services:
+
+  backend:
+
+    build: .
+
+    container_name: museum_backend
+
+    ports:
+      - "9000:5000"
+
+    environment:
+
+      DB_HOST: database
+
+      DB_USER: museum_user
+
+      DB_PASSWORD: museum_pass
+
+      DB_NAME: museum_db
+
+    depends_on:
+
+      database:
+        condition: service_healthy
+
+
+  database:
+
+    image: mysql:8.0
+
+    container_name: museum_database
+
+    environment:
+
+      MYSQL_ROOT_PASSWORD: rootpass
+
+      MYSQL_DATABASE: museum_db
+
+      MYSQL_USER: museum_user
+
+      MYSQL_PASSWORD: museum_pass
+
+    ports:
+
+      - "3307:3306"
+
+    volumes:
+
+      - museum_data:/var/lib/mysql
+
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    healthcheck:
+
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-prootpass"
+        ]
+
+      interval: 10s
+
+      timeout: 5s
+
+      retries: 5
+
+
+volumes:
+
+  museum_data:
